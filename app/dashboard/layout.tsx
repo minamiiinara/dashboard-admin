@@ -4,7 +4,8 @@ import { usePathname } from "next/navigation";
 import "@/app/dashboard/dashboard.css"; // Import your CSS file here
 
 const menu = [
-  { href: "/dashboard", label: "Alumni" },
+  { href: "/dashboard", label: "Overview" },
+  { href: "/dashboard/alumni", label: "Alumni" },
   { href: "/dashboard/events", label: "Event" },
   { href: "/dashboard/newsletter", label: "Newsletter" },
   { href: "/dashboard/lowongan", label: "Lowongan" },

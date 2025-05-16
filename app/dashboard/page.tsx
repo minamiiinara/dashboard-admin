@@ -1,15 +1,21 @@
-// app/dashboard/page.tsx
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 
 export default function OverviewPage() {
+  const router = useRouter();
+
+  const [isChecking, setIsChecking] = useState(true);
+  const [authorized, setAuthorized] = useState(false);
+
   const [stats, setStats] = useState({
     alumni: 0,
     events: 0,
     sig: 0,
     jobs: 0,
   });
+
   interface Alumni {
     id: string;
     full_name: string;
@@ -21,9 +27,36 @@ export default function OverviewPage() {
   const [pendingAlumni, setPendingAlumni] = useState<Alumni[]>([]);
 
   useEffect(() => {
-    fetchStats();
-    fetchPendingAlumni();
+    checkAccess();
   }, []);
+
+  const checkAccess = async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session) {
+      router.push("/login");
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("is_admin")
+      .eq("id", session.user.id)
+      .single();
+
+    if (error || !data?.is_admin) {
+      alert("Akses ditolak");
+      router.push("/login");
+    } else {
+      setAuthorized(true);
+      fetchStats();
+      fetchPendingAlumni();
+    }
+
+    setIsChecking(false);
+  };
 
   const fetchStats = async () => {
     const [alumni, events, sig, jobs] = await Promise.all([
@@ -58,6 +91,8 @@ export default function OverviewPage() {
     fetchPendingAlumni();
   };
 
+  if (isChecking) return null; // atau loading spinner
+  if (!authorized) return null;
   return (
     <div className="p-6 space-y-8">
       <h1 className="text-2xl font-bold text-[#0062F2]">Dashboard Overview</h1>
